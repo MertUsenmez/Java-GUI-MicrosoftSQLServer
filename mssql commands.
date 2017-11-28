@@ -1,0 +1,116 @@
+
+
+
+//Some MSSQL commands.
+
+
+
+CREATE DATABASE DatabaseName
+
+use DatabaseName
+
+CREATE TABLE Persons(
+
+PersonID int NOT NULL unique, 
+Name varchar(50) NOT NULL, 
+Surname varchar(50) NOT NULL, 
+BirthOfDate Date NOT NULL, 
+Gender varchar(10) NOT NULL, 
+MaritalStatus varchar(20) NOT NULL, 
+HealthSituation varchar(20) NOT NULL,
+CONSTRAINT Person_PK PRIMARY KEY (PersonID));
+
+
+CREATE TABLE School(
+SchoolID int NOT NULL UNIQUE,
+SchoolName varchar(255),
+SchoolType varchar(255),
+CONSTRAINT School_PK PRIMARY KEY (SchoolID));
+
+CREATE TABLE SCHOOL_PHONE(
+SchoolPhoneID int NOT NULL unique,
+SchoolPhoneNumber varchar(255),
+SchoolPhoneType varchar(255),
+SCHOOLSchoolID int,
+CONSTRAINT SCHOOL_PHONE_PK PRIMARY KEY (SchoolPhoneID),
+CONSTRAINT SCHOOL_Relationship FOREIGN KEY (SCHOOLSchoolID) REFERENCES SCHOOL(SchoolID));
+
+CREATE TABLE SCHOOL_ADDRESS(
+SchoolAddressID int NOT NULL unique,
+Street varchar(20),
+SchoolState varchar(20),
+Country varchar(20),
+ZipCode int,
+City varchar(20),
+AddressDetail varchar(225),
+SCHOOLSchoolID int,
+CONSTRAINT SCHOOL_ADDRESS_PK PRIMARY KEY (SchoolAddressID),
+CONSTRAINT SCHOOL_ADDRESS_Relationship FOREIGN KEY (SCHOOLSchoolID) REFERENCES School(SchoolID));
+
+CREATE TABLE STUDENT(
+PERSONPersonID int NOT NULL UNIQUE,
+StudentNumber int,
+StudentBranch varchar(255),
+BirthFather varchar(255),
+BirthMother varchar(255),
+PARENT_OF_STUDENTPERSONPersonID int,
+CLUBClubID int,
+SCHOOLSchoolID int,
+CONSTRAINT STUDENT_PK PRIMARY KEY (PERSONPersonID),
+CONSTRAINT STUDENT_Relationship1 FOREIGN KEY (PERSONPersonID) REFERENCES Persons(PersonID),
+CONSTRAINT STUDENT_Relationship2 FOREIGN KEY (CLUBClubID ) REFERENCES CLUB(ClubID),
+CONSTRAINT STUDENT_Relationship3 FOREIGN KEY (SCHOOLSchoolID ) REFERENCES SCHOOL(SchoolID),
+CONSTRAINT STUDENT_Relationship4 FOREIGN KEY (PARENT_OF_STUDENTPERSONPersonID) REFERENCES PARENT_OF_STUDENT(PERSONPersonID));
+
+--------------------------------------------------------------------------
+
+CREATE PROCEDURE sp_School_Add	
+	@SchoolID int,
+	@SchoolName varchar(255),
+	@SchoolType varchar(255)
+AS
+BEGIN
+	IF EXISTS(SELECT * FROM School WHERE SchoolID = @SchoolID)
+	  BEGIN
+	     select -2
+	  END
+	ELSE
+	  BEGIN
+	     BEGIN TRAN
+		    INSERT INTO School(SchoolID, SchoolName, SchoolType) OUTPUT inserted.SchoolID values(@SchoolID, @SchoolName, @SchoolType)
+
+			IF @@ROWCOUNT > 0  BEGIN COMMIT TRAN END
+
+            ELSE BEGIN ROLLBACK TRAN SELECT -3 END 
+	END
+END
+GO		
+------------------------------------------------------------------------------
+
+CREATE PROCEDURE sp_Persons_Add	
+    @PersonID int,
+	@Name varchar(255),
+	@Surname varchar(255),
+	@BirthOfDate Date,
+	@Gender varchar(10),
+	@MaritalStatus varchar(20),
+	@HealthSituations varchar(20)
+AS
+BEGIN
+	IF EXISTS(SELECT * FROM Persons WHERE PersonID = @PersonID)
+	  BEGIN
+	     select -2
+	  END
+	ELSE
+	  BEGIN
+	     BEGIN TRAN
+		    INSERT INTO Persons(PersonID, Name, Surname, BirthOfDate, Gender, MaritalStatus, HealthSituations) 
+			OUTPUT inserted.PersonID
+			values(@PersonID, @Name, @Surname, @BirthOfDate, @Gender, @MaritalStatus, @HealthSituation)
+
+			IF @@ROWCOUNT > 0  BEGIN COMMIT TRAN END
+
+            ELSE BEGIN ROLLBACK TRAN SELECT -3 END 
+	END
+END
+GO
